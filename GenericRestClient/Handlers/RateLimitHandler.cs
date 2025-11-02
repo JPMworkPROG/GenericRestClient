@@ -8,7 +8,7 @@ public class RateLimitHandler : DelegatingHandler
 {
    private readonly RateLimitOptions _options;
    private readonly Queue<DateTime> _requestTimes = new();
-   private readonly SemaphoreSlim _queueLock = new(1, 1);
+   private readonly Lock _queueLock = new();
    private readonly ILogger<RateLimitHandler> _logger;
 
    public RateLimitHandler(IOptions<ApiClientOptions> options, ILogger<RateLimitHandler> logger)
@@ -47,8 +47,10 @@ public class RateLimitHandler : DelegatingHandler
 
    private async Task WaitForRateLimitAsync(CancellationToken cancellationToken)
    {
-      await _queueLock.WaitAsync(cancellationToken);
-      try
+      TimeSpan delayRequired;
+
+      // Verifica e calcula tempo de espera necessário
+      lock (_queueLock)
       {
          var now = DateTime.UtcNow;
          var oneMinuteAgo = now.AddMinutes(-1);
@@ -69,40 +71,50 @@ public class RateLimitHandler : DelegatingHandler
                removedCount);
          }
 
-         // Se já atingiu o limite de requisições no período, aguarda
+         // Se já atingiu o limite de requisições no período, calcula o tempo de espera
          if (_requestTimes.Count >= _options.RequestsPerMinute)
          {
             var oldestRequest = _requestTimes.Peek();
-            var timeUntilExpiry = oldestRequest.AddMinutes(1) - now;
+            delayRequired = oldestRequest.AddMinutes(1) - now;
 
             _logger.LogWarning(
                "Limite de requisições atingido ({CurrentCount}/{MaxLimit}). Aguardando {WaitTimeMs}ms até a expiração da requisição mais antiga",
                _requestTimes.Count,
                _options.RequestsPerMinute,
-               timeUntilExpiry.TotalMilliseconds);
+               delayRequired.TotalMilliseconds);
+         }
+         else
+         {
+            delayRequired = TimeSpan.Zero;
+         }
+      }
 
-            if (timeUntilExpiry > TimeSpan.Zero)
-            {
-               try
-               {
-                  await Task.Delay(timeUntilExpiry, cancellationToken);
-                  _logger.LogDebug(
-                     "Aguarde do rate limit concluído, prosseguindo com a requisição");
-               }
-               catch (OperationCanceledException)
-               {
-                  _logger.LogWarning(
-                     "Aguarde do rate limit foi cancelado");
-                  throw;
-               }
-            }
+      // Aguarda FORA do lock para não bloquear outras requisições
+      if (delayRequired > TimeSpan.Zero)
+      {
+         try
+         {
+            _logger.LogDebug("Iniciando aguarde de rate limit por {DelayMs}ms", delayRequired.TotalMilliseconds);
+            await Task.Delay(delayRequired, cancellationToken);
+            _logger.LogDebug("Aguarde do rate limit concluído, prosseguindo com a requisição");
+         }
+         catch (OperationCanceledException)
+         {
+            _logger.LogWarning("Aguarde do rate limit foi cancelado");
+            throw;
+         }
+      }
 
-            // Após aguardar, remove a requisição expirada
+      // Registra a requisição APÓS aguardar
+      lock (_queueLock)
+      {
+         // Remove requisições expiradas novamente (caso tenha esperado)
+         var now = DateTime.UtcNow;
+         var oneMinuteAgo = now.AddMinutes(-1);
+
+         while (_requestTimes.Count > 0 && _requestTimes.Peek() < oneMinuteAgo)
+         {
             _requestTimes.Dequeue();
-            _logger.LogDebug(
-               "Requisição expirada removida, nova contagem: {CurrentCount}/{MaxLimit}",
-               _requestTimes.Count,
-               _options.RequestsPerMinute);
          }
 
          // Registra a nova requisição
@@ -112,28 +124,5 @@ public class RateLimitHandler : DelegatingHandler
             _requestTimes.Count,
             _options.RequestsPerMinute);
       }
-      catch (Exception ex)
-      {
-         _logger.LogError(
-            ex,
-            "Erro ao processar rate limit: {ErrorMessage}",
-            ex.Message);
-         throw;
-      }
-      finally
-      {
-         _queueLock.Release();
-      }
-   }
-
-   protected override void Dispose(bool disposing)
-   {
-      if (disposing)
-      {
-         _logger.LogInformation(
-            "RateLimitHandler sendo descartado, finalizando recursos");
-         _queueLock.Dispose();
-      }
-      base.Dispose(disposing);
    }
 }

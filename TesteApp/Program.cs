@@ -1,4 +1,5 @@
-﻿using GenericRestClient.Core;
+﻿using GenericRestClient.Configuration;
+using GenericRestClient.Core;
 using GenericRestClient.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,8 +11,12 @@ builder.Configuration
    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
    .AddEnvironmentVariables();
 
-// Registrar GenericRestClient com todos os handlers configurados
-builder.Services.AddGenericRestClient(builder.Configuration);
+// Configurar opções do ApiClient
+builder.Services.Configure<ApiClientOptions>(
+   builder.Configuration.GetSection(ApiClientOptions.SectionName));
+
+// Registrar RestClient com seus handlers
+builder.Services.AddGenericRestClient();
 
 var host = builder.Build();
 
