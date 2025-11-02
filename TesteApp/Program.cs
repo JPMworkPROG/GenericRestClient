@@ -47,69 +47,7 @@ try
         Console.WriteLine();
     }
 
-    // ======================== TESTE 2: Buscar Usuário ========================
-    Console.WriteLine("TESTE 2: Buscando dados de usuário");
-    Console.WriteLine("─────────────────────────────────────────────\n");
-
-    var user = await client.GetAsync<object, JsonElement>(
-        "users/1",
-        CancellationToken.None);
-
-    if (user.ValueKind != JsonValueKind.Undefined)
-    {
-        Console.WriteLine("Sucesso! Dados do usuário:");
-        Console.WriteLine($"   ID: {user.GetProperty("id")}");
-        Console.WriteLine($"   Nome: {user.GetProperty("name")}");
-        Console.WriteLine($"   Email: {user.GetProperty("email")}");
-        Console.WriteLine($"   Website: {user.GetProperty("website")}");
-        Console.WriteLine();
-    }
-
-    // ======================== TESTE 3: Buscar Lista de Posts ========================
-    Console.WriteLine("TESTE 3: Buscando lista de posts de um usuário");
-    Console.WriteLine("─────────────────────────────────────────────────────\n");
-
-    var userPosts = await client.GetAsync<object, JsonElement>(
-        "posts?userId=1&_limit=3",
-        CancellationToken.None);
-
-    if (userPosts.ValueKind == JsonValueKind.Array)
-    {
-        Console.WriteLine($"Sucesso! Encontrados {userPosts.GetArrayLength()} posts:");
-
-        int count = 1;
-        foreach (var post in userPosts.EnumerateArray())
-        {
-            Console.WriteLine($"   {count}. {post.GetProperty("title")}");
-            count++;
-        }
-        Console.WriteLine();
-    }
-
-    // ======================== TESTE 4: Buscar Comentários ========================
-    Console.WriteLine("TESTE 4: Buscando comentários de um post");
-    Console.WriteLine("───────────────────────────────────────────\n");
-
-    var comments = await client.GetAsync<object, JsonElement>(
-        "posts/1/comments?_limit=2",
-        CancellationToken.None);
-
-    if (comments.ValueKind == JsonValueKind.Array)
-    {
-        Console.WriteLine($"Sucesso! Encontrados {comments.GetArrayLength()} comentários:");
-
-        int count = 1;
-        foreach (var comment in comments.EnumerateArray())
-        {
-            Console.WriteLine($"   {count}. {comment.GetProperty("name")}");
-            Console.WriteLine($"      Email: {comment.GetProperty("email")}");
-            count++;
-        }
-        Console.WriteLine();
-    }
-
-    // ======================== TESTE 5: Tratamento de Erro (404) ========================
-    Console.WriteLine("TESTE 5: Testando tratamento de erro (404)");
+    Console.WriteLine("TESTE 2: Testando tratamento de erro (404)");
     Console.WriteLine("──────────────────────────────────────────────\n");
 
     try
@@ -124,13 +62,71 @@ try
         Console.WriteLine();
     }
 
-    // ======================== RESUMO FINAL ========================
+    Console.WriteLine("TESTE 3: Criando novo post");
+    Console.WriteLine("─────────────────────────────────────────────\n");
+
+    var novoPost = new
+    {
+        title = "Title Field Test",
+        body = "Validando POST com GenericRestClient.",
+        userId = 1
+    };
+
+    var postCriado = await client.PostAsync<object, JsonElement>(
+        "posts",
+        novoPost,
+        CancellationToken.None);
+
+    if (postCriado.ValueKind != JsonValueKind.Undefined)
+    {
+        Console.WriteLine("Sucesso! Post criado (simulação JSONPlaceholder):");
+        Console.WriteLine($"   ID: {postCriado.GetProperty("id")}");
+        Console.WriteLine($"   Título: {postCriado.GetProperty("title")}");
+        Console.WriteLine($"   Corpo: {postCriado.GetProperty("body")}");
+        Console.WriteLine();
+    }
+
+    Console.WriteLine("TESTE 4: Atualizando post existente");
+    Console.WriteLine("─────────────────────────────────────────────\n");
+
+    var postAtualizado = new
+    {
+        id = 1,
+        title = "Title Field Test - Atualizado",
+        body = "Validando PUT com GenericRestClient.",
+        userId = 1
+    };
+
+    var resultadoPut = await client.PutAsync<object, JsonElement>(
+        "posts/1",
+        postAtualizado,
+        CancellationToken.None);
+
+    if (resultadoPut.ValueKind != JsonValueKind.Undefined)
+    {
+        Console.WriteLine("Sucesso! Post atualizado (simulação JSONPlaceholder):");
+        Console.WriteLine($"   ID: {resultadoPut.GetProperty("id")}");
+        Console.WriteLine($"   Título: {resultadoPut.GetProperty("title")}");
+        Console.WriteLine($"   Corpo: {resultadoPut.GetProperty("body")}");
+        Console.WriteLine();
+    }
+
+    Console.WriteLine("TESTE 5: Deletando post");
+    Console.WriteLine("─────────────────────────────────────────────\n");
+
+    await client.DeleteAsync(
+        "posts/1",
+        CancellationToken.None);
+
+    Console.WriteLine("Sucesso! DELETE retornou status esperado (sem conteúdo).");
+    Console.WriteLine();
+
     Console.WriteLine("╔════════════════════════════════════════════════════════════════╗");
-    Console.WriteLine("║                    TESTES CONCLUÍDOS COM SUCESSO            ║");
+    Console.WriteLine("║      TESTES DE GET/POST/PUT/DELETE CONCLUÍDOS COM SUCESSO         ║");
     Console.WriteLine("╚════════════════════════════════════════════════════════════════╝");
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"Erro durante os testes: {ex.Message}");
+    Console.WriteLine($"Erro durante os testes de escrita: {ex.Message}");
     Console.WriteLine($"Stack Trace: {ex.StackTrace}");
 }

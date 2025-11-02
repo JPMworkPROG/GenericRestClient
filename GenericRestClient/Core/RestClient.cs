@@ -93,6 +93,181 @@ public class RestClient : IRestClient
       }
    }
 
+   public async Task<TResponse?> PostAsync<TRequest, TResponse>(string endpoint, TRequest body, CancellationToken cancellationToken = default)
+   {
+      _logger.LogInformation(
+         "Iniciando requisição POST para o endpoint: {Endpoint}",
+         endpoint);
+
+      try
+      {
+         var requestUri = new Uri(_httpClient.BaseAddress!, endpoint);
+         _logger.LogDebug(
+            "URL completa da requisição: {FullUrl}",
+            requestUri.AbsoluteUri);
+
+         var startTime = DateTime.UtcNow;
+         var response = await _httpClient.PostAsJsonAsync(endpoint, body, _jsonOptions, cancellationToken);
+         var duration = DateTime.UtcNow - startTime;
+
+         _logger.LogDebug(
+            "Requisição POST concluída para {Endpoint} com status {StatusCode} em {Duration}ms",
+            endpoint,
+            response.StatusCode,
+            duration.TotalMilliseconds);
+
+         var result = await DeserializeResponseAsync<TResponse>(response, cancellationToken);
+
+         _logger.LogInformation(
+            "Requisição POST processada com sucesso para {Endpoint}",
+            endpoint);
+
+         return result;
+      }
+      catch (HttpRequestException ex)
+      {
+         _logger.LogError(
+            ex,
+            "Erro ao executar requisição POST para {Endpoint}: {ErrorMessage}",
+            endpoint,
+            ex.Message);
+         throw;
+      }
+      catch (TaskCanceledException ex)
+      {
+         _logger.LogWarning(
+            ex,
+            "Requisição POST para {Endpoint} foi cancelada ou expirou",
+            endpoint);
+         throw;
+      }
+      catch (Exception ex)
+      {
+         _logger.LogError(
+            ex,
+            "Erro inesperado ao processar requisição POST para {Endpoint}: {ErrorMessage}",
+            endpoint,
+            ex.Message);
+         throw;
+      }
+   }
+
+   public async Task<TResponse?> PutAsync<TRequest, TResponse>(string endpoint, TRequest body, CancellationToken cancellationToken = default)
+   {
+      _logger.LogInformation(
+         "Iniciando requisição PUT para o endpoint: {Endpoint}",
+         endpoint);
+
+      try
+      {
+         var requestUri = new Uri(_httpClient.BaseAddress!, endpoint);
+         _logger.LogDebug(
+            "URL completa da requisição: {FullUrl}",
+            requestUri.AbsoluteUri);
+
+         var startTime = DateTime.UtcNow;
+         var response = await _httpClient.PutAsJsonAsync(endpoint, body, _jsonOptions, cancellationToken);
+         var duration = DateTime.UtcNow - startTime;
+
+         _logger.LogDebug(
+            "Requisição PUT concluída para {Endpoint} com status {StatusCode} em {Duration}ms",
+            endpoint,
+            response.StatusCode,
+            duration.TotalMilliseconds);
+
+         var result = await DeserializeResponseAsync<TResponse>(response, cancellationToken);
+
+         _logger.LogInformation(
+            "Requisição PUT processada com sucesso para {Endpoint}",
+            endpoint);
+
+         return result;
+      }
+      catch (HttpRequestException ex)
+      {
+         _logger.LogError(
+            ex,
+            "Erro ao executar requisição PUT para {Endpoint}: {ErrorMessage}",
+            endpoint,
+            ex.Message);
+         throw;
+      }
+      catch (TaskCanceledException ex)
+      {
+         _logger.LogWarning(
+            ex,
+            "Requisição PUT para {Endpoint} foi cancelada ou expirou",
+            endpoint);
+         throw;
+      }
+      catch (Exception ex)
+      {
+         _logger.LogError(
+            ex,
+            "Erro inesperado ao processar requisição PUT para {Endpoint}: {ErrorMessage}",
+            endpoint,
+            ex.Message);
+         throw;
+      }
+   }
+
+   public async Task DeleteAsync(string endpoint, CancellationToken cancellationToken = default)
+   {
+      _logger.LogInformation(
+         "Iniciando requisição DELETE para o endpoint: {Endpoint}",
+         endpoint);
+
+      try
+      {
+         var requestUri = new Uri(_httpClient.BaseAddress!, endpoint);
+         _logger.LogDebug(
+            "URL completa da requisição: {FullUrl}",
+            requestUri.AbsoluteUri);
+
+         var startTime = DateTime.UtcNow;
+         var response = await _httpClient.DeleteAsync(endpoint, cancellationToken);
+         var duration = DateTime.UtcNow - startTime;
+
+         _logger.LogDebug(
+            "Requisição DELETE concluída para {Endpoint} com status {StatusCode} em {Duration}ms",
+            endpoint,
+            response.StatusCode,
+            duration.TotalMilliseconds);
+
+         response.EnsureSuccessStatusCode();
+
+         _logger.LogInformation(
+            "Requisição DELETE processada com sucesso para {Endpoint}",
+            endpoint);
+      }
+      catch (HttpRequestException ex)
+      {
+         _logger.LogError(
+            ex,
+            "Erro ao executar requisição DELETE para {Endpoint}: {ErrorMessage}",
+            endpoint,
+            ex.Message);
+         throw;
+      }
+      catch (TaskCanceledException ex)
+      {
+         _logger.LogWarning(
+            ex,
+            "Requisição DELETE para {Endpoint} foi cancelada ou expirou",
+            endpoint);
+         throw;
+      }
+      catch (Exception ex)
+      {
+         _logger.LogError(
+            ex,
+            "Erro inesperado ao processar requisição DELETE para {Endpoint}: {ErrorMessage}",
+            endpoint,
+            ex.Message);
+         throw;
+      }
+   }
+
    private async Task<T?> DeserializeResponseAsync<T>(
         HttpResponseMessage response,
         CancellationToken cancellationToken)
