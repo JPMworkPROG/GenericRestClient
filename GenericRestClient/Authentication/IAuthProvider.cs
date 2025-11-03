@@ -1,9 +1,7 @@
-using System.Net.Http;
-using System.Threading;
-
 namespace GenericRestClient.Authentication;
 
 public interface IAuthProvider
 {
-   Task SetAccessTokenAsync(HttpRequestMessage request, CancellationToken cancellationToken);
+   Task<string> GetAccessTokenAsync();
+   Task SetAccessTokenAsync(HttpRequestMessage request, string accessToken, CancellationToken cancellationToken);
 }

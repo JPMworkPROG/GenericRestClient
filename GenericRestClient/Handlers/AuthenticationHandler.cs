@@ -27,10 +27,15 @@ public class AuthenticationHandler : DelegatingHandler
    {
       if (!_options.Enabled)
       {
+         _logger.LogDebug(
+           "Autenticação desabilitada, processando requisição {Method} {RequestUri} normalmente",
+           request.Method,
+           request.RequestUri);
          return await base.SendAsync(request, cancellationToken);
       }
 
-      await _authProvider.SetAccessTokenAsync(request, cancellationToken);
+      string accessToken = await _authProvider.GetAccessTokenAsync();
+      await _authProvider.SetAccessTokenAsync(request, accessToken, cancellationToken);
       _logger.LogInformation("Credenciais aplicadas pelo provider {Provider}", _authProvider.GetType().Name);
 
       return await base.SendAsync(request, cancellationToken);

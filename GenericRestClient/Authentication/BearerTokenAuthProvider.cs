@@ -1,9 +1,7 @@
 using GenericRestClient.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Threading;
 
 namespace GenericRestClient.Authentication;
 
@@ -19,16 +17,19 @@ public class BearerTokenAuthProvider : IAuthProvider
       _logger = logger;
    }
 
-   public Task SetAccessTokenAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   public Task<string> GetAccessTokenAsync()
    {
-      var token = _options.BearerToken;
+      return Task.FromResult(_options.BearerToken!);
+   }
 
-      if (string.IsNullOrWhiteSpace(token))
+   public Task SetAccessTokenAsync(HttpRequestMessage request, string accessToken, CancellationToken cancellationToken)
+   {
+      if (string.IsNullOrWhiteSpace(accessToken))
       {
          throw new InvalidOperationException("BearerToken must be provided for bearer authentication.");
       }
 
-      request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+      request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
       _logger.LogDebug("Bearer token aplicado na requisição.");
       return Task.CompletedTask;
    }
