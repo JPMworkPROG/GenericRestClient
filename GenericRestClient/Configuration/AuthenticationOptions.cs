@@ -2,9 +2,9 @@ namespace GenericRestClient.Configuration;
 
 public class AuthenticationOptions
 {
-   public bool Enabled { get; set; }
-   public string? Type { get; set; }
-   public string? BearerToken { get; set; }
+   public bool Enabled { get; set; } = false;
+   public string Type { get; set; } = String.Empty;
+   public string BearerToken { get; set; } = String.Empty;
 
    public void Validate()
    {
@@ -18,21 +18,23 @@ public class AuthenticationOptions
          throw new InvalidOperationException("Authentication Type is required when authentication is enabled.");
       }
 
-      var normalizedType = Type.Trim();
-
-      switch (normalizedType.ToLowerInvariant())
+      switch (Type.Trim().ToLowerInvariant())
       {
          case "bearer":
-            if (string.IsNullOrWhiteSpace(BearerToken))
-            {
-               throw new InvalidOperationException(
-                  "BearerToken is required when Authentication Type is 'Bearer'.");
-            }
+            BearerValidation();
             break;
 
          default:
-            throw new InvalidOperationException(
-               $"Unsupported authentication type '{Type}'. Supported types: Bearer.");
+            throw new InvalidOperationException($"Unsupported authentication type '{Type}'. Supported types: Bearer.");
+      }
+   }
+
+   public void BearerValidation()
+   {
+      if (string.IsNullOrWhiteSpace(BearerToken))
+      {
+         throw new InvalidOperationException(
+            "BearerToken is required when Authentication Type is 'Bearer'.");
       }
    }
 }

@@ -8,7 +8,7 @@ namespace GenericRestClient.Handlers;
 public class AuthenticationHandler : DelegatingHandler
 {
    private readonly IAuthProvider _authProvider;
-   private readonly AuthenticationOptions _options;
+   private readonly AuthenticationOptions _authOptions;
    private readonly ILogger<AuthenticationHandler> _logger;
 
    public AuthenticationHandler(
@@ -17,7 +17,7 @@ public class AuthenticationHandler : DelegatingHandler
       ILogger<AuthenticationHandler> logger)
    {
       _authProvider = authProvider;
-      _options = options.Value.Authentication;
+      _authOptions = options.Value.Authentication;
       _logger = logger;
    }
 
@@ -25,18 +25,16 @@ public class AuthenticationHandler : DelegatingHandler
       HttpRequestMessage request,
       CancellationToken cancellationToken)
    {
-      if (!_options.Enabled)
+      if (!_authOptions.Enabled)
       {
-         _logger.LogDebug(
-           "Autenticação desabilitada, processando requisição {Method} {RequestUri} normalmente",
-           request.Method,
-           request.RequestUri);
+         _logger.LogInformation($"Authentication middleware are disabled");
          return await base.SendAsync(request, cancellationToken);
       }
 
-      string accessToken = await _authProvider.GetAccessTokenAsync();
+      _logger.LogInformation($"Appling credentials in the request");
+      string accessToken = await _authProvider.GetAccessTokenAsync(cancellationToken);
       await _authProvider.SetAccessTokenAsync(request, accessToken, cancellationToken);
-      _logger.LogInformation("Credenciais aplicadas pelo provider {Provider}", _authProvider.GetType().Name);
+      _logger.LogInformation($"Credentials applied in the request");
 
       return await base.SendAsync(request, cancellationToken);
    }

@@ -16,10 +16,7 @@ public class RateLimitHandler : DelegatingHandler
       _options = options.Value.RateLimit;
       _logger = logger;
 
-      _logger.LogInformation(
-         "RateLimitHandler inicializado - Habilitado: {Enabled}, Limite: {RequestsPerMinute} requisições por minuto",
-         _options.Enabled,
-         _options.RequestsPerMinute);
+      _logger.LogInformation("Ratelimit middleware configured");
    }
 
    protected override async Task<HttpResponseMessage> SendAsync(
@@ -28,19 +25,13 @@ public class RateLimitHandler : DelegatingHandler
    {
       if (!_options.Enabled)
       {
-         _logger.LogDebug(
-            "Rate limit desabilitado, processando requisição {Method} {RequestUri} normalmente",
-            request.Method,
-            request.RequestUri);
+         _logger.LogInformation($"Ratelimit middleware are disabled");
          return await base.SendAsync(request, cancellationToken);
       }
 
-      _logger.LogDebug(
-         "Aplicando rate limit para requisição {Method} {RequestUri}",
-         request.Method,
-         request.RequestUri);
-
+      _logger.LogInformation($"Appling rate limit in the request");
       await WaitForRateLimitAsync(cancellationToken);
+      _logger.LogInformation($"Rate limit applied in the request");
 
       return await base.SendAsync(request, cancellationToken);
    }

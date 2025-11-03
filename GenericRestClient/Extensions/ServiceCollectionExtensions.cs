@@ -18,13 +18,14 @@ public static class ServiceCollectionExtensions
       var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
       var logger = loggerFactory?.CreateLogger("GenericRestClient.Extensions");
 
-      logger?.LogInformation("Iniciando configuração da biblioteca GenericRestClient");
+      logger?.LogInformation("Starting configuration of the GenericRestClient library");
 
       try
       {
-         logger?.LogDebug("Registrando providers");
+         logger?.LogDebug("Registering auth providers");
          services.TryAddSingleton<IValidateOptions<ApiClientOptions>, ApiClientOptionsValidator>();
          services.TryAddSingleton<BearerTokenAuthProvider>();
+         services.TryAddSingleton<NoAuthProvider>();
          services.TryAddSingleton<IAuthProvider>(sp =>
          {
             var optionsAccessor = sp.GetRequiredService<IOptions<ApiClientOptions>>();
@@ -33,7 +34,7 @@ public static class ServiceCollectionExtensions
 
             if (!authOptions.Enabled)
             {
-               return new NoAuthProvider();
+               return sp.GetRequiredService<NoAuthProvider>();
             }
 
             return authOptions.Type switch
@@ -42,24 +43,25 @@ public static class ServiceCollectionExtensions
                _ => throw new InvalidOperationException($"Unsupported authentication type: {authOptions.Type}")
             };
          });
+
+         logger?.LogDebug("Registering request handlers");
          services.AddTransient<AuthenticationHandler>();
          services.AddTransient<RateLimitHandler>();
 
 
-         logger?.LogDebug("Registrando GenericRestClient como cliente http");
+         logger?.LogDebug("Registering generic http client");
          services.AddHttpClient<IRestClient, RestClient>()
             .AddHttpMessageHandler<AuthenticationHandler>()
             .AddHttpMessageHandler<RateLimitHandler>();
 
-         logger?.LogInformation("Configuração da biblioteca GenericRestClient concluída com sucesso");
+         logger?.LogInformation("Success in configuration of the GenericRestClient library");
          return services;
       }
       catch (Exception ex)
       {
          logger?.LogError(
             ex,
-            "Erro ao configurar a biblioteca GenericRestClient: {ErrorMessage}",
-            ex.Message);
+            $"Error in configuration of the GenericRestClient {ex.Message}");
          throw;
       }
    }

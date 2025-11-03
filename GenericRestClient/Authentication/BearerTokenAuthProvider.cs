@@ -7,30 +7,32 @@ namespace GenericRestClient.Authentication;
 
 public class BearerTokenAuthProvider : IAuthProvider
 {
-   private readonly AuthenticationOptions _options;
+   private readonly AuthenticationOptions _authOptions;
    private readonly ILogger<BearerTokenAuthProvider> _logger;
    public BearerTokenAuthProvider(
       IOptions<ApiClientOptions> options,
       ILogger<BearerTokenAuthProvider> logger)
    {
-      _options = options.Value.Authentication;
+      _authOptions = options.Value.Authentication;
       _logger = logger;
+
+      _logger.LogInformation("Authentication middleware 'BearerToken' configured");
    }
 
-   public Task<string> GetAccessTokenAsync()
+   public Task<string> GetAccessTokenAsync(CancellationToken cancellationToken)
    {
-      return Task.FromResult(_options.BearerToken!);
+      _logger.LogDebug("Retrieving bearer token");
+      string bearerToken = _authOptions.BearerToken;
+      _logger.LogDebug("Bearer token retrieved");
+
+      return Task.FromResult(bearerToken);
    }
 
    public Task SetAccessTokenAsync(HttpRequestMessage request, string accessToken, CancellationToken cancellationToken)
    {
-      if (string.IsNullOrWhiteSpace(accessToken))
-      {
-         throw new InvalidOperationException("BearerToken must be provided for bearer authentication.");
-      }
-
+      _logger.LogDebug("Assigning bearer token to request header");
       request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-      _logger.LogDebug("Bearer token aplicado na requisição.");
+      _logger.LogDebug("Bearer token assigned to header");
       return Task.CompletedTask;
    }
 }
