@@ -35,15 +35,12 @@ try
     Console.WriteLine("─────────────────────────────────────────────\n");
 
     var posts = await client.GetAsync<object, JsonElement>(
-        "posts/1",
+        "bearer",
         CancellationToken.None);
 
     if (posts.ValueKind != JsonValueKind.Undefined)
     {
-        Console.WriteLine(" Sucesso! Response recebido:");
-        Console.WriteLine($"   ID: {posts.GetProperty("id")}");
-        Console.WriteLine($"   Título: {posts.GetProperty("title")}");
-        Console.WriteLine($"   Corpo: {posts.GetProperty("body")}");
+        Console.WriteLine($" {posts}");
         Console.WriteLine();
     }
 
