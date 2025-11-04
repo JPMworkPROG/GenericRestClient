@@ -1,6 +1,7 @@
 using GenericRestClient.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Threading;
 
 namespace GenericRestClient.Handlers;
 
@@ -8,7 +9,7 @@ public class RateLimitHandler : DelegatingHandler
 {
    private readonly RateLimitOptions _options;
    private readonly Queue<DateTime> _requestTimes = new();
-   private readonly Lock _queueLock = new();
+   private readonly SemaphoreSlim _queueSemaphore = new(1, 1);
    private readonly ILogger<RateLimitHandler> _logger;
 
    public RateLimitHandler(IOptions<ApiClientOptions> options, ILogger<RateLimitHandler> logger)
@@ -41,7 +42,8 @@ public class RateLimitHandler : DelegatingHandler
       TimeSpan delayRequired;
 
       // Verifica e calcula tempo de espera necessário
-      lock (_queueLock)
+      await _queueSemaphore.WaitAsync(cancellationToken);
+      try
       {
          var now = DateTime.UtcNow;
          var oneMinuteAgo = now.AddMinutes(-1);
@@ -79,8 +81,12 @@ public class RateLimitHandler : DelegatingHandler
             delayRequired = TimeSpan.Zero;
          }
       }
+      finally
+      {
+         _queueSemaphore.Release();
+      }
 
-      // Aguarda FORA do lock para não bloquear outras requisições
+      // Aguarda FORA da região crítica para não bloquear outras requisições
       if (delayRequired > TimeSpan.Zero)
       {
          try
@@ -97,7 +103,8 @@ public class RateLimitHandler : DelegatingHandler
       }
 
       // Registra a requisição APÓS aguardar
-      lock (_queueLock)
+      await _queueSemaphore.WaitAsync(cancellationToken);
+      try
       {
          // Remove requisições expiradas novamente (caso tenha esperado)
          var now = DateTime.UtcNow;
@@ -115,5 +122,19 @@ public class RateLimitHandler : DelegatingHandler
             _requestTimes.Count,
             _options.RequestsPerMinute);
       }
+      finally
+      {
+         _queueSemaphore.Release();
+      }
+   }
+
+   protected override void Dispose(bool disposing)
+   {
+      if (disposing)
+      {
+         _queueSemaphore.Dispose();
+      }
+
+      base.Dispose(disposing);
    }
 }
