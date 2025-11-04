@@ -39,46 +39,18 @@ public class RateLimitHandler : DelegatingHandler
 
    private async Task WaitForRateLimitAsync(CancellationToken cancellationToken)
    {
-      TimeSpan delayRequired;
+      TimeSpan delayRequired = TimeSpan.Zero;
 
-      // Verifica e calcula tempo de espera necessário
       await _queueSemaphore.WaitAsync(cancellationToken);
       try
       {
-         var now = DateTime.UtcNow;
-         var oneMinuteAgo = now.AddMinutes(-1);
+         DateTime now = DateTime.UtcNow;
+         DequeueOldRequests(now);
 
-         var initialQueueSize = _requestTimes.Count;
-
-         // Remove requisições antigas (fora da janela de 1 minuto)
-         while (_requestTimes.Count > 0 && _requestTimes.Peek() < oneMinuteAgo)
-         {
-            _requestTimes.Dequeue();
-         }
-
-         var removedCount = initialQueueSize - _requestTimes.Count;
-         if (removedCount > 0)
-         {
-            _logger.LogDebug(
-               "Removidas {RemovedCount} requisições expiradas da janela de 1 minuto",
-               removedCount);
-         }
-
-         // Se já atingiu o limite de requisições no período, calcula o tempo de espera
          if (_requestTimes.Count >= _options.RequestsPerMinute)
          {
-            var oldestRequest = _requestTimes.Peek();
+            DateTime oldestRequest = _requestTimes.Peek();
             delayRequired = oldestRequest.AddMinutes(1) - now;
-
-            _logger.LogWarning(
-               "Limite de requisições atingido ({CurrentCount}/{MaxLimit}). Aguardando {WaitTimeMs}ms até a expiração da requisição mais antiga",
-               _requestTimes.Count,
-               _options.RequestsPerMinute,
-               delayRequired.TotalMilliseconds);
-         }
-         else
-         {
-            delayRequired = TimeSpan.Zero;
          }
       }
       finally
@@ -86,14 +58,13 @@ public class RateLimitHandler : DelegatingHandler
          _queueSemaphore.Release();
       }
 
-      // Aguarda FORA da região crítica para não bloquear outras requisições
+
       if (delayRequired > TimeSpan.Zero)
       {
          try
          {
-            _logger.LogDebug("Iniciando aguarde de rate limit por {DelayMs}ms", delayRequired.TotalMilliseconds);
+            _logger.LogDebug($"Request limit reach ({_requestTimes.Count}/{_options.RequestsPerMinute}). Waiting  {delayRequired.TotalMilliseconds}ms until expire oldest request");
             await Task.Delay(delayRequired, cancellationToken);
-            _logger.LogDebug("Aguarde do rate limit concluído, prosseguindo com a requisição");
          }
          catch (OperationCanceledException)
          {
@@ -102,25 +73,14 @@ public class RateLimitHandler : DelegatingHandler
          }
       }
 
-      // Registra a requisição APÓS aguardar
       await _queueSemaphore.WaitAsync(cancellationToken);
       try
       {
-         // Remove requisições expiradas novamente (caso tenha esperado)
-         var now = DateTime.UtcNow;
-         var oneMinuteAgo = now.AddMinutes(-1);
+         DateTime now = DateTime.UtcNow;
+         DequeueOldRequests(now);
 
-         while (_requestTimes.Count > 0 && _requestTimes.Peek() < oneMinuteAgo)
-         {
-            _requestTimes.Dequeue();
-         }
-
-         // Registra a nova requisição
          _requestTimes.Enqueue(now);
-         _logger.LogDebug(
-            "Nova requisição registrada, contagem atual: {CurrentCount}/{MaxLimit}",
-            _requestTimes.Count,
-            _options.RequestsPerMinute);
+         _logger.LogDebug($"New request registered, current count is: {_requestTimes.Count}/{_options.RequestsPerMinute}");
       }
       finally
       {
@@ -136,5 +96,22 @@ public class RateLimitHandler : DelegatingHandler
       }
 
       base.Dispose(disposing);
+   }
+
+   private void DequeueOldRequests(DateTime now)
+   {
+      int initialQueueSize = _requestTimes.Count;
+      DateTime oneMinuteAgo = now.AddMinutes(-1);
+
+      while (_requestTimes.Count > 0 && _requestTimes.Peek() < oneMinuteAgo)
+      {
+         _requestTimes.Dequeue();
+      }
+
+      int removedCount = initialQueueSize - _requestTimes.Count;
+      if (removedCount > 0)
+      {
+         _logger.LogDebug($"Dequeued {removedCount} expired requests");
+      }
    }
 }
