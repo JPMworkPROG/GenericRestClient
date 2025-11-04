@@ -315,7 +315,8 @@ public class RestClient : IRestClient
             ex,
             "Erro HTTP ao desserializar resposta: {ErrorMessage}",
             ex.Message);
-         throw;
+         // throw;
+         return default;
       }
       catch (JsonException ex)
       {
@@ -323,7 +324,8 @@ public class RestClient : IRestClient
             ex,
             "Erro ao desserializar JSON: {ErrorMessage}",
             ex.Message);
-         throw;
+         // throw;
+         return default;
       }
       catch (Exception ex)
       {
@@ -331,7 +333,8 @@ public class RestClient : IRestClient
             ex,
             "Erro inesperado ao desserializar resposta: {ErrorMessage}",
             ex.Message);
-         throw;
+         // throw;
+         return default;
       }
    }
 }

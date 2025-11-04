@@ -35,12 +35,42 @@ try
     Console.WriteLine("─────────────────────────────────────────────\n");
 
     var posts = await client.GetAsync<object, JsonElement>(
-        "bearer",
+        "connect/userinfo",
         CancellationToken.None);
 
     if (posts.ValueKind != JsonValueKind.Undefined)
     {
         Console.WriteLine($" {posts}");
+        Console.WriteLine();
+    }
+
+    // ======================== TESTE 1: Buscar Posts ========================
+    Console.WriteLine(" TESTE 2: Buscando posts do JSONPlaceholder");
+    Console.WriteLine("─────────────────────────────────────────────\n");
+
+    var posts2 = await client.GetAsync<object, JsonElement>(
+        "connect/userinfo",
+        CancellationToken.None);
+
+    if (posts.ValueKind != JsonValueKind.Undefined)
+    {
+        Console.WriteLine($" {posts2}");
+        Console.WriteLine();
+    }
+
+    await Task.Delay(TimeSpan.FromMinutes(2));
+
+    // ======================== TESTE 1: Buscar Posts ========================
+    Console.WriteLine(" TESTE 3: Buscando posts do JSONPlaceholder");
+    Console.WriteLine("─────────────────────────────────────────────\n");
+
+    var posts3 = await client.GetAsync<object, JsonElement>(
+        "connect/userinfo",
+        CancellationToken.None);
+
+    if (posts.ValueKind != JsonValueKind.Undefined)
+    {
+        Console.WriteLine($" {posts3}");
         Console.WriteLine();
     }
 

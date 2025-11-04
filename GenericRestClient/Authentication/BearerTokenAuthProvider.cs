@@ -22,7 +22,7 @@ public class BearerTokenAuthProvider : IAuthProvider
    public Task<string> GetAccessTokenAsync(CancellationToken cancellationToken)
    {
       _logger.LogDebug("Retrieving bearer token");
-      string bearerToken = _authOptions.BearerToken;
+      string bearerToken = _authOptions.ApiKey;
       _logger.LogDebug("Bearer token retrieved");
 
       return Task.FromResult(bearerToken);

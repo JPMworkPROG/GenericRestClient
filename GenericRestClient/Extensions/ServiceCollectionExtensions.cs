@@ -25,6 +25,7 @@ public static class ServiceCollectionExtensions
          logger?.LogDebug("Registering auth providers");
          services.TryAddSingleton<IValidateOptions<ApiClientOptions>, ApiClientOptionsValidator>();
          services.TryAddSingleton<BearerTokenAuthProvider>();
+         services.TryAddSingleton<OAuth2AuthProvider>();
          services.TryAddSingleton<NoAuthProvider>();
          services.TryAddSingleton<IAuthProvider>(sp =>
          {
@@ -40,6 +41,7 @@ public static class ServiceCollectionExtensions
             return authOptions.Type switch
             {
                "Bearer" => sp.GetRequiredService<BearerTokenAuthProvider>(),
+               "OAuth2" => sp.GetRequiredService<OAuth2AuthProvider>(),
                _ => throw new InvalidOperationException($"Unsupported authentication type: {authOptions.Type}")
             };
          });
