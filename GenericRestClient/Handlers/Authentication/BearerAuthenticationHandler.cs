@@ -4,7 +4,7 @@ using System.Net.Http.Headers;
 
 namespace GenericRestClient.Handlers.Authentication;
 
-public class BearerAuthenticationHandler : DelegatingHandler, IAuthenticationHandler
+public class BearerAuthenticationHandler : DelegatingHandler
 {
    private readonly BearerTokenAuthProvider _authProvider;
    private readonly ILogger<BearerAuthenticationHandler> _logger;
@@ -16,8 +16,6 @@ public class BearerAuthenticationHandler : DelegatingHandler, IAuthenticationHan
       _authProvider = authProvider;
       _logger = logger;
    }
-
-   public string AuthenticationType => "Bearer";
 
    protected override async Task<HttpResponseMessage> SendAsync(
       HttpRequestMessage request,

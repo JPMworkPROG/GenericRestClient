@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace GenericRestClient.Handlers.Authentication;
 
-public class ApiKeyAuthenticationHandler : DelegatingHandler, IAuthenticationHandler
+public class ApiKeyAuthenticationHandler : DelegatingHandler
 {
    private readonly ApiKeyAuthProvider _authProvider;
    private readonly AuthenticationOptions _authOptions;
@@ -20,8 +20,6 @@ public class ApiKeyAuthenticationHandler : DelegatingHandler, IAuthenticationHan
       _authOptions = options.Value.Authentication;
       _logger = logger;
    }
-
-   public string AuthenticationType => "ApiKey";
 
    protected override async Task<HttpResponseMessage> SendAsync(
       HttpRequestMessage request,

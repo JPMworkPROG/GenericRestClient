@@ -4,7 +4,7 @@ using System.Net.Http.Headers;
 
 namespace GenericRestClient.Handlers.Authentication;
 
-public class OAuth2AuthenticationHandler : DelegatingHandler, IAuthenticationHandler
+public class OAuth2AuthenticationHandler : DelegatingHandler
 {
    private readonly OAuth2AuthProvider _authProvider;
    private readonly ILogger<OAuth2AuthenticationHandler> _logger;
@@ -16,8 +16,6 @@ public class OAuth2AuthenticationHandler : DelegatingHandler, IAuthenticationHan
       _authProvider = authProvider;
       _logger = logger;
    }
-
-   public string AuthenticationType => "OAuth2";
 
    protected override async Task<HttpResponseMessage> SendAsync(
       HttpRequestMessage request,
