@@ -17,8 +17,8 @@ var httpClientBuilder = builder.Services.ConfigureGenericRestClient(builder.Conf
 var options = builder.Configuration.GetSection("ApiClient").Get<GenericRestClient.Configuration.ApiClientOptions>();
 if (options?.Authentication?.Enabled == true)
 {
-   var authType = options.Authentication.Type?.Trim();
-   switch (authType?.ToUpperInvariant())
+   var authType = options.Authentication.Type?.Trim().ToUpperInvariant();
+   switch (authType)
    {
       case "BEARER":
          httpClientBuilder.AddBearerAuthentication();
@@ -35,6 +35,11 @@ if (options?.Authentication?.Enabled == true)
 if (options?.RateLimit?.Enabled == true)
 {
    httpClientBuilder.AddRateLimit();
+}
+
+if (options?.Retry?.Enabled == true)
+{
+   httpClientBuilder.AddRetry();
 }
 
 var host = builder.Build();

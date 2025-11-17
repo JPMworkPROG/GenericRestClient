@@ -24,9 +24,9 @@ public class RateLimitHandler : DelegatingHandler
       HttpRequestMessage request,
       CancellationToken cancellationToken)
    {
-      _logger.LogInformation($"Appling rate limit in the request");
+      _logger.LogInformation("Applying rate limit in the request");
       await WaitForRateLimitAsync(cancellationToken);
-      _logger.LogInformation($"Rate limit applied in the request");
+      _logger.LogInformation("Rate limit applied in the request");
 
       return await base.SendAsync(request, cancellationToken);
    }
@@ -41,13 +41,19 @@ public class RateLimitHandler : DelegatingHandler
 
          if (_requestTimes.Count >= _options.RequestsPerMinute)
          {
-            _logger.LogDebug($"Request limit reach ({_requestTimes.Count}/{_options.RequestsPerMinute}), discarding request.");
+            _logger.LogDebug(
+               "Request limit reach ({CurrentCount}/{MaxRequests}), discarding request.",
+               _requestTimes.Count,
+               _options.RequestsPerMinute);
             throw new Exception("Rate limit reached");
          }
          else
          {
             _requestTimes.Enqueue(now);
-            _logger.LogDebug($"New request registered, current count is: {_requestTimes.Count}/{_options.RequestsPerMinute}");
+            _logger.LogDebug(
+               "New request registered, current count is: {CurrentCount}/{MaxRequests}",
+               _requestTimes.Count,
+               _options.RequestsPerMinute);
          }
       }
       finally
@@ -79,7 +85,9 @@ public class RateLimitHandler : DelegatingHandler
       int removedCount = initialQueueSize - _requestTimes.Count;
       if (removedCount > 0)
       {
-         _logger.LogDebug($"Dequeued {removedCount} expired requests");
+         _logger.LogDebug(
+            "Dequeued {RemovedCount} expired requests",
+            removedCount);
       }
    }
 }

@@ -27,24 +27,24 @@ public class RestClient : IRestClient
       };
 
       _logger.LogInformation(
-         "RestClient iniciado com BaseUrl: {BaseUrl}",
+         "RestClient started with BaseUrl: {BaseUrl}",
          _options.BaseUrl);
       _logger.LogDebug(
-         "Configurações JSON: PropertyNameCaseInsensitive={CaseInsensitive}, NamingPolicy=CamelCase",
+         "JSON configuration: PropertyNameCaseInsensitive={CaseInsensitive}, NamingPolicy=CamelCase",
          _jsonOptions.PropertyNameCaseInsensitive);
    }
 
    public async Task<TResponse?> GetAsync<TRequqest, TResponse>(string endpoint, CancellationToken cancellationToken = default)
    {
       _logger.LogInformation(
-         "Iniciando requisição GET para o endpoint: {Endpoint}",
+         "Starting GET request to endpoint: {Endpoint}",
          endpoint);
 
       try
       {
          var requestUri = new Uri(_httpClient.BaseAddress!, endpoint);
          _logger.LogDebug(
-            "URL completa da requisição: {FullUrl}",
+            "Full request URL: {FullUrl}",
             requestUri.AbsoluteUri);
 
          var startTime = DateTime.UtcNow;
@@ -52,7 +52,7 @@ public class RestClient : IRestClient
          var duration = DateTime.UtcNow - startTime;
 
          _logger.LogDebug(
-            "Requisição GET concluída para {Endpoint} com status {StatusCode} em {Duration}ms",
+            "GET request completed for {Endpoint} with status {StatusCode} in {Duration}ms",
             endpoint,
             response.StatusCode,
             duration.TotalMilliseconds);
@@ -60,7 +60,7 @@ public class RestClient : IRestClient
          var result = await DeserializeResponseAsync<TResponse>(response, cancellationToken);
 
          _logger.LogInformation(
-            "Requisição GET processada com sucesso para {Endpoint}",
+            "GET request processed successfully for {Endpoint}",
             endpoint);
 
          return result;
@@ -69,7 +69,7 @@ public class RestClient : IRestClient
       {
          _logger.LogError(
             ex,
-            "Erro ao executar requisição GET para {Endpoint}: {ErrorMessage}",
+            "Error executing GET request to {Endpoint}: {ErrorMessage}",
             endpoint,
             ex.Message);
          throw;
@@ -78,7 +78,7 @@ public class RestClient : IRestClient
       {
          _logger.LogWarning(
             ex,
-            "Requisição GET para {Endpoint} foi cancelada ou expirou",
+            "GET request to {Endpoint} was cancelled or expired",
             endpoint);
          throw;
       }
@@ -86,7 +86,7 @@ public class RestClient : IRestClient
       {
          _logger.LogError(
             ex,
-            "Erro inesperado ao processar requisição GET para {Endpoint}: {ErrorMessage}",
+            "Unexpected error processing GET request to {Endpoint}: {ErrorMessage}",
             endpoint,
             ex.Message);
          throw;
@@ -96,14 +96,14 @@ public class RestClient : IRestClient
    public async Task<TResponse?> PostAsync<TRequest, TResponse>(string endpoint, TRequest body, CancellationToken cancellationToken = default)
    {
       _logger.LogInformation(
-         "Iniciando requisição POST para o endpoint: {Endpoint}",
+         "Starting POST request to endpoint: {Endpoint}",
          endpoint);
 
       try
       {
          var requestUri = new Uri(_httpClient.BaseAddress!, endpoint);
          _logger.LogDebug(
-            "URL completa da requisição: {FullUrl}",
+            "Full request URL: {FullUrl}",
             requestUri.AbsoluteUri);
 
          var startTime = DateTime.UtcNow;
@@ -111,7 +111,7 @@ public class RestClient : IRestClient
          var duration = DateTime.UtcNow - startTime;
 
          _logger.LogDebug(
-            "Requisição POST concluída para {Endpoint} com status {StatusCode} em {Duration}ms",
+            "POST request completed for {Endpoint} with status {StatusCode} in {Duration}ms",
             endpoint,
             response.StatusCode,
             duration.TotalMilliseconds);
@@ -119,7 +119,7 @@ public class RestClient : IRestClient
          var result = await DeserializeResponseAsync<TResponse>(response, cancellationToken);
 
          _logger.LogInformation(
-            "Requisição POST processada com sucesso para {Endpoint}",
+            "POST request processed successfully for {Endpoint}",
             endpoint);
 
          return result;
@@ -128,7 +128,7 @@ public class RestClient : IRestClient
       {
          _logger.LogError(
             ex,
-            "Erro ao executar requisição POST para {Endpoint}: {ErrorMessage}",
+            "Error executing POST request to {Endpoint}: {ErrorMessage}",
             endpoint,
             ex.Message);
          throw;
@@ -137,7 +137,7 @@ public class RestClient : IRestClient
       {
          _logger.LogWarning(
             ex,
-            "Requisição POST para {Endpoint} foi cancelada ou expirou",
+            "POST request to {Endpoint} was cancelled or expired",
             endpoint);
          throw;
       }
@@ -145,7 +145,7 @@ public class RestClient : IRestClient
       {
          _logger.LogError(
             ex,
-            "Erro inesperado ao processar requisição POST para {Endpoint}: {ErrorMessage}",
+            "Unexpected error processing POST request to {Endpoint}: {ErrorMessage}",
             endpoint,
             ex.Message);
          throw;
@@ -155,14 +155,14 @@ public class RestClient : IRestClient
    public async Task<TResponse?> PutAsync<TRequest, TResponse>(string endpoint, TRequest body, CancellationToken cancellationToken = default)
    {
       _logger.LogInformation(
-         "Iniciando requisição PUT para o endpoint: {Endpoint}",
+         "Starting PUT request to endpoint: {Endpoint}",
          endpoint);
 
       try
       {
          var requestUri = new Uri(_httpClient.BaseAddress!, endpoint);
          _logger.LogDebug(
-            "URL completa da requisição: {FullUrl}",
+            "Full request URL: {FullUrl}",
             requestUri.AbsoluteUri);
 
          var startTime = DateTime.UtcNow;
@@ -170,7 +170,7 @@ public class RestClient : IRestClient
          var duration = DateTime.UtcNow - startTime;
 
          _logger.LogDebug(
-            "Requisição PUT concluída para {Endpoint} com status {StatusCode} em {Duration}ms",
+            "PUT request completed for {Endpoint} with status {StatusCode} in {Duration}ms",
             endpoint,
             response.StatusCode,
             duration.TotalMilliseconds);
@@ -178,7 +178,7 @@ public class RestClient : IRestClient
          var result = await DeserializeResponseAsync<TResponse>(response, cancellationToken);
 
          _logger.LogInformation(
-            "Requisição PUT processada com sucesso para {Endpoint}",
+            "PUT request processed successfully for {Endpoint}",
             endpoint);
 
          return result;
@@ -187,7 +187,7 @@ public class RestClient : IRestClient
       {
          _logger.LogError(
             ex,
-            "Erro ao executar requisição PUT para {Endpoint}: {ErrorMessage}",
+            "Error executing PUT request to {Endpoint}: {ErrorMessage}",
             endpoint,
             ex.Message);
          throw;
@@ -196,7 +196,7 @@ public class RestClient : IRestClient
       {
          _logger.LogWarning(
             ex,
-            "Requisição PUT para {Endpoint} foi cancelada ou expirou",
+            "PUT request to {Endpoint} was cancelled or expired",
             endpoint);
          throw;
       }
@@ -204,7 +204,7 @@ public class RestClient : IRestClient
       {
          _logger.LogError(
             ex,
-            "Erro inesperado ao processar requisição PUT para {Endpoint}: {ErrorMessage}",
+            "Unexpected error processing PUT request to {Endpoint}: {ErrorMessage}",
             endpoint,
             ex.Message);
          throw;
@@ -214,14 +214,14 @@ public class RestClient : IRestClient
    public async Task DeleteAsync(string endpoint, CancellationToken cancellationToken = default)
    {
       _logger.LogInformation(
-         "Iniciando requisição DELETE para o endpoint: {Endpoint}",
+         "Starting DELETE request to endpoint: {Endpoint}",
          endpoint);
 
       try
       {
          var requestUri = new Uri(_httpClient.BaseAddress!, endpoint);
          _logger.LogDebug(
-            "URL completa da requisição: {FullUrl}",
+            "Full request URL: {FullUrl}",
             requestUri.AbsoluteUri);
 
          var startTime = DateTime.UtcNow;
@@ -229,7 +229,7 @@ public class RestClient : IRestClient
          var duration = DateTime.UtcNow - startTime;
 
          _logger.LogDebug(
-            "Requisição DELETE concluída para {Endpoint} com status {StatusCode} em {Duration}ms",
+            "DELETE request completed for {Endpoint} with status {StatusCode} in {Duration}ms",
             endpoint,
             response.StatusCode,
             duration.TotalMilliseconds);
@@ -237,14 +237,14 @@ public class RestClient : IRestClient
          response.EnsureSuccessStatusCode();
 
          _logger.LogInformation(
-            "Requisição DELETE processada com sucesso para {Endpoint}",
+            "DELETE request processed successfully for {Endpoint}",
             endpoint);
       }
       catch (HttpRequestException ex)
       {
          _logger.LogError(
             ex,
-            "Erro ao executar requisição DELETE para {Endpoint}: {ErrorMessage}",
+            "Error executing DELETE request to {Endpoint}: {ErrorMessage}",
             endpoint,
             ex.Message);
          throw;
@@ -253,7 +253,7 @@ public class RestClient : IRestClient
       {
          _logger.LogWarning(
             ex,
-            "Requisição DELETE para {Endpoint} foi cancelada ou expirou",
+            "DELETE request to {Endpoint} was cancelled or expired",
             endpoint);
          throw;
       }
@@ -261,7 +261,7 @@ public class RestClient : IRestClient
       {
          _logger.LogError(
             ex,
-            "Erro inesperado ao processar requisição DELETE para {Endpoint}: {ErrorMessage}",
+            "Unexpected error processing DELETE request to {Endpoint}: {ErrorMessage}",
             endpoint,
             ex.Message);
          throw;
@@ -273,47 +273,47 @@ public class RestClient : IRestClient
         CancellationToken cancellationToken)
    {
       _logger.LogDebug(
-         "Iniciando desserialização da resposta com status {StatusCode}",
+         "Starting response deserialization with status {StatusCode}",
          response.StatusCode);
 
       try
       {
          response.EnsureSuccessStatusCode();
          _logger.LogDebug(
-            "Status de resposta verificado com sucesso: {StatusCode}",
+            "Response status verified successfully: {StatusCode}",
             response.StatusCode);
 
          // Handle empty responses
          if (response.Content.Headers.ContentLength == 0)
          {
             _logger.LogDebug(
-               "Resposta está vazia (ContentLength = 0), retornando valor padrão");
+               "Response is empty (ContentLength = 0), returning default value");
             return default;
          }
 
          var contentType = response.Content.Headers.ContentType?.MediaType;
          _logger.LogDebug(
-            "Content-Type da resposta: {ContentType}",
-            contentType ?? "não especificado");
+            "Response Content-Type: {ContentType}",
+            contentType ?? "not specified");
 
          // Only deserialize JSON responses
          if (contentType != null && contentType.Contains("application/json", StringComparison.OrdinalIgnoreCase))
          {
             _logger.LogDebug(
-               "Desserializando resposta JSON");
+               "Deserializing JSON response");
             return await response.Content.ReadFromJsonAsync<T>(_jsonOptions, cancellationToken);
          }
 
          _logger.LogWarning(
-            "Content-Type não é JSON ({ContentType}), retornando valor padrão",
-            contentType ?? "não especificado");
+            "Content-Type is not JSON ({ContentType}), returning default value",
+            contentType ?? "not specified");
          return default;
       }
       catch (HttpRequestException ex)
       {
          _logger.LogError(
             ex,
-            "Erro HTTP ao desserializar resposta: {ErrorMessage}",
+            "HTTP error deserializing response: {ErrorMessage}",
             ex.Message);
          // throw;
          return default;
@@ -322,7 +322,7 @@ public class RestClient : IRestClient
       {
          _logger.LogError(
             ex,
-            "Erro ao desserializar JSON: {ErrorMessage}",
+            "Error deserializing JSON: {ErrorMessage}",
             ex.Message);
          // throw;
          return default;
@@ -331,7 +331,7 @@ public class RestClient : IRestClient
       {
          _logger.LogError(
             ex,
-            "Erro inesperado ao desserializar resposta: {ErrorMessage}",
+            "Unexpected error deserializing response: {ErrorMessage}",
             ex.Message);
          // throw;
          return default;
