@@ -6,6 +6,7 @@ public class ApiClientOptions
    public string BaseUrl { get; set; } = string.Empty;
    public RateLimitOptions RateLimit { get; set; } = new();
    public AuthenticationOptions Authentication { get; set; } = new();
+   public RetryOptions Retry { get; set; } = new();
 
    public void Validate()
    {
@@ -21,5 +22,6 @@ public class ApiClientOptions
 
       Authentication.Validate();
       RateLimit.Validate();
+      Retry.Validate();
    }
 }
