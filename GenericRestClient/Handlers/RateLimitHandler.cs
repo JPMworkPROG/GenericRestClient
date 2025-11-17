@@ -24,12 +24,6 @@ public class RateLimitHandler : DelegatingHandler
       HttpRequestMessage request,
       CancellationToken cancellationToken)
    {
-      if (!_options.Enabled)
-      {
-         _logger.LogInformation($"Ratelimit middleware are disabled");
-         return await base.SendAsync(request, cancellationToken);
-      }
-
       _logger.LogInformation($"Appling rate limit in the request");
       await WaitForRateLimitAsync(cancellationToken);
       _logger.LogInformation($"Rate limit applied in the request");
@@ -39,8 +33,6 @@ public class RateLimitHandler : DelegatingHandler
 
    private async Task WaitForRateLimitAsync(CancellationToken cancellationToken)
    {
-      TimeSpan delayRequired = TimeSpan.Zero;
-
       await _queueSemaphore.WaitAsync(cancellationToken);
       try
       {
@@ -49,38 +41,14 @@ public class RateLimitHandler : DelegatingHandler
 
          if (_requestTimes.Count >= _options.RequestsPerMinute)
          {
-            DateTime oldestRequest = _requestTimes.Peek();
-            delayRequired = oldestRequest.AddMinutes(1) - now;
+            _logger.LogDebug($"Request limit reach ({_requestTimes.Count}/{_options.RequestsPerMinute}), discarding request.");
+            throw new Exception("Rate limit reached");
          }
-      }
-      finally
-      {
-         _queueSemaphore.Release();
-      }
-
-
-      if (delayRequired > TimeSpan.Zero)
-      {
-         try
+         else
          {
-            _logger.LogDebug($"Request limit reach ({_requestTimes.Count}/{_options.RequestsPerMinute}). Waiting  {delayRequired.TotalMilliseconds}ms until expire oldest request");
-            await Task.Delay(delayRequired, cancellationToken);
+            _requestTimes.Enqueue(now);
+            _logger.LogDebug($"New request registered, current count is: {_requestTimes.Count}/{_options.RequestsPerMinute}");
          }
-         catch (OperationCanceledException)
-         {
-            _logger.LogWarning("Aguarde do rate limit foi cancelado");
-            throw;
-         }
-      }
-
-      await _queueSemaphore.WaitAsync(cancellationToken);
-      try
-      {
-         DateTime now = DateTime.UtcNow;
-         DequeueOldRequests(now);
-
-         _requestTimes.Enqueue(now);
-         _logger.LogDebug($"New request registered, current count is: {_requestTimes.Count}/{_options.RequestsPerMinute}");
       }
       finally
       {

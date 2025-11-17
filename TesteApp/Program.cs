@@ -1,5 +1,4 @@
-﻿using GenericRestClient.Configuration;
-using GenericRestClient.Core;
+﻿using GenericRestClient.Core;
 using GenericRestClient.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,12 +10,32 @@ builder.Configuration
    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
    .AddEnvironmentVariables();
 
-// Configurar opções do ApiClient
-builder.Services.Configure<ApiClientOptions>(
-   builder.Configuration.GetSection(ApiClientOptions.SectionName));
+// Registrar RestClient com configuração flexível
+var httpClientBuilder = builder.Services.ConfigureGenericRestClient(builder.Configuration);
 
-// Registrar RestClient com seus handlers
-builder.Services.AddGenericRestClient();
+// Configurar handlers baseado nas opções (exemplo de flexibilidade)
+var options = builder.Configuration.GetSection("ApiClient").Get<GenericRestClient.Configuration.ApiClientOptions>();
+if (options?.Authentication?.Enabled == true)
+{
+   var authType = options.Authentication.Type?.Trim();
+   switch (authType?.ToUpperInvariant())
+   {
+      case "BEARER":
+         httpClientBuilder.AddBearerAuthentication();
+         break;
+      case "APIKEY":
+         httpClientBuilder.AddApiKeyAuthentication();
+         break;
+      case "OAUTH2":
+         httpClientBuilder.AddOAuth2Authentication();
+         break;
+   }
+}
+
+if (options?.RateLimit?.Enabled == true)
+{
+   httpClientBuilder.AddRateLimit();
+}
 
 var host = builder.Build();
 
