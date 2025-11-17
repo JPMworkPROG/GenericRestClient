@@ -5,6 +5,7 @@ public class AuthenticationOptions
    public bool Enabled { get; set; } = false;
    public string Type { get; set; } = string.Empty;
    public string ApiKey { get; set; } = string.Empty;
+   public string ApiKeyHeader { get; set; } = string.Empty;
    public string ClientId { get; set; } = string.Empty;
    public string ClientSecret { get; set; } = string.Empty;
    public string TokenEndpoint { get; set; } = string.Empty;
@@ -29,6 +30,10 @@ public class AuthenticationOptions
             BearerValidation();
             break;
 
+         case "apikey":
+            ApiKeyValidation();
+            break;
+
          case "oauth2":
             OAuth2Validation();
             break;
@@ -44,6 +49,15 @@ public class AuthenticationOptions
       {
          throw new InvalidOperationException(
             "BearerToken is required when Authentication Type is 'Bearer'.");
+      }
+   }
+
+   public void ApiKeyValidation()
+   {
+      if (string.IsNullOrWhiteSpace(ApiKey))
+      {
+         throw new InvalidOperationException(
+            "ApiKey is required when Authentication Type is 'ApiKey'.");
       }
    }
 

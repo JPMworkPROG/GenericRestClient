@@ -17,7 +17,6 @@ public class OAuth2AuthProvider : IAuthProvider
 
    private readonly SemaphoreSlim _tokenSemaphore = new(1, 1);
    private string? _cachedAccessToken;
-   private string _cachedTokenType = "Bearer";
    private DateTimeOffset _tokenExpiresAt = DateTimeOffset.MinValue;
 
    public OAuth2AuthProvider(
@@ -32,7 +31,7 @@ public class OAuth2AuthProvider : IAuthProvider
       _logger.LogInformation("Authentication middleware 'OAuth2' configured");
    }
 
-   public async Task<string> GetAccessTokenAsync(CancellationToken cancellationToken)
+   public async Task<string> GetAccessTokenAsync()
    {
       _logger.LogDebug("Retrieving OAuth2 access token");
 
@@ -42,7 +41,7 @@ public class OAuth2AuthProvider : IAuthProvider
          return _cachedAccessToken!;
       }
 
-      await _tokenSemaphore.WaitAsync(cancellationToken);
+      await _tokenSemaphore.WaitAsync();
       try
       {
          if (TokenIsValid())
@@ -51,10 +50,9 @@ public class OAuth2AuthProvider : IAuthProvider
             return _cachedAccessToken!;
          }
 
-         var tokenResponse = await RequestTokenAsync(cancellationToken);
+         var tokenResponse = await RequestTokenAsync();
 
          _cachedAccessToken = tokenResponse.AccessToken;
-         _cachedTokenType = tokenResponse.TokenType ?? "Bearer";
          _tokenExpiresAt = CalculateTokenExpiration(tokenResponse.ExpiresIn);
 
          _logger.LogDebug(
@@ -67,17 +65,6 @@ public class OAuth2AuthProvider : IAuthProvider
       {
          _tokenSemaphore.Release();
       }
-   }
-
-   public Task SetAccessTokenAsync(
-      HttpRequestMessage request,
-      string accessToken,
-      CancellationToken cancellationToken)
-   {
-      _logger.LogDebug("Assigning OAuth2 access token to request header");
-      request.Headers.Authorization = new AuthenticationHeaderValue(_cachedTokenType, accessToken);
-      _logger.LogDebug("OAuth2 access token assigned to header");
-      return Task.CompletedTask;
    }
 
    private bool TokenIsValid()
@@ -101,7 +88,7 @@ public class OAuth2AuthProvider : IAuthProvider
       return DateTimeOffset.UtcNow.AddSeconds(expiresInSeconds.Value - refreshSkew);
    }
 
-   private async Task<OAuthTokenResponse> RequestTokenAsync(CancellationToken cancellationToken)
+   private async Task<OAuthTokenResponse> RequestTokenAsync()
    {
       using var client = _httpClientFactory.CreateClient(nameof(OAuth2AuthProvider));
 
@@ -112,11 +99,11 @@ public class OAuth2AuthProvider : IAuthProvider
 
       request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-      var response = await client.SendAsync(request, cancellationToken);
+      var response = await client.SendAsync(request);
 
       if (!response.IsSuccessStatusCode)
       {
-         var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+         var errorContent = await response.Content.ReadAsStringAsync();
          _logger.LogError(
             "OAuth2 token endpoint returned {StatusCode}. Response: {Response}",
             (int)response.StatusCode,
@@ -125,10 +112,9 @@ public class OAuth2AuthProvider : IAuthProvider
          response.EnsureSuccessStatusCode();
       }
 
-      await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+      await using var responseStream = await response.Content.ReadAsStreamAsync();
       var tokenResponse = await JsonSerializer.DeserializeAsync<OAuthTokenResponse>(
-         responseStream,
-         cancellationToken: cancellationToken);
+         responseStream);
 
       if (tokenResponse is null || string.IsNullOrWhiteSpace(tokenResponse.AccessToken))
       {
