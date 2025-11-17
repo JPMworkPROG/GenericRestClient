@@ -30,16 +30,15 @@ Este documento explica o fluxo básico das requisições através dos handlers d
 ```mermaid
 sequenceDiagram
     participant C as Cliente
-    participant RC as RestClient
+    participant GRC as GenericRestClient
     participant RH as Retry Handler
     participant RL as RateLimit Handler
     participant AH as Auth Handler
     participant HC as HttpClient
     participant S as Servidor
 
-    C->>RC: Requisição
-    RC->>HC: HttpClient
-    HC->>RH: SendAsync
+    C->>GRC: Requisição
+    GRC->>RH: Requisição
     RH->>RL: base.SendAsync
     RL->>AH: base.SendAsync
     AH->>HC: base.SendAsync
@@ -49,8 +48,8 @@ sequenceDiagram
     HC-->>AH: HttpResponseMessage
     AH-->>RL: HttpResponseMessage
     RL-->>RH: HttpResponseMessage
-    RH-->>RC: HttpResponseMessage
-    RC-->>C: Resultado
+    RH-->>GRC: HttpResponseMessage
+    GRC-->>C: Resultado
 ```
 
 ## Configuração
