@@ -21,7 +21,7 @@ O GenericRestClient é uma biblioteca .NET que fornece uma abstração simplific
 ### Rate Limiting
 - Controle de requisições por minuto
 - Fila automática de requisições
-- Descarte quando limite é atingido
+- Lança exceção quando limite é atingido
 
 ### Retry/Backoff
 - Retry automático para códigos 429 e 5xx
@@ -50,9 +50,11 @@ Adicione o projeto GenericRestClient à sua solução.
     "Authentication": {
       "Enabled": true,
       "Type": "OAuth2",
+      "GrantType": "client_credentials",
       "ClientId": "seu-client-id",
       "ClientSecret": "seu-client-secret",
-      "TokenEndpoint": "https://auth.exemplo.com/token"
+      "TokenEndpoint": "https://auth.exemplo.com/token",
+      "TokenRefreshSkewSeconds": 60
     },
     "RateLimit": {
       "Enabled": true,
@@ -84,6 +86,15 @@ builder.Configuration
 
 // Registrar RestClient
 var httpClientBuilder = builder.Services.ConfigureGenericRestClient(builder.Configuration);
+
+// Adicionar headers customizados (opcional)
+httpClientBuilder.ConfigureHttpClient(client =>
+{
+    if (!client.DefaultRequestHeaders.Contains("User-Agent"))
+    {
+        client.DefaultRequestHeaders.Add("User-Agent", "GenericRestClient/1.0");
+    }
+});
 
 // Configurar handlers
 var options = builder.Configuration.GetSection("ApiClient")
@@ -126,8 +137,8 @@ var client = host.Services.GetRequiredService<IRestClient>();
 ### 3. Uso do Cliente
 
 ```csharp
-// GET
-var user = await client.GetAsync<object, User>("users/123");
+// GET (não requer parâmetro genérico para request, apenas para response)
+var user = await client.GetAsync<User>("users/123");
 
 // POST
 var newUser = new { Name = "João", Email = "joao@exemplo.com" };

@@ -6,7 +6,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericRestClient", "Generi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericRestClient.Tests", "GenericRestClient.Tests\GenericRestClient.Tests.csproj", "{1298E853-F0EC-4D59-9385-72E2237767B9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TesteApp", "TesteApp\TesteApp.csproj", "{9FD50D48-AAE2-43B4-A016-A9C87CDCBA63}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleApp", "SampleApp\SampleApp.csproj", "{9FD50D48-AAE2-43B4-A016-A9C87CDCBA63}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

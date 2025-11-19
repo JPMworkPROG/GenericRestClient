@@ -18,7 +18,7 @@ Este documento explica o fluxo básico das requisições através dos handlers d
 
 ### RateLimit Handler
 - **Função**: Controla taxa de requisições por minuto
-- **Processa**: Apenas requisições (bloqueia se limite atingido)
+- **Processa**: Apenas requisições (lança exceção se limite atingido)
 
 ### Authentication Handler
 - **Função**: Adiciona credenciais de autenticação
@@ -70,6 +70,7 @@ Configure os handlers através da seção `ApiClient` no arquivo `appsettings.js
       "ClientId": "seu-client-id",
       "ClientSecret": "seu-client-secret",
       "TokenEndpoint": "https://auth.exemplo.com/token",
+      "BearerToken": "seu-bearer-token",
       "ApiKey": "sua-api-key",
       "ApiKeyHeader": "x-api-key",
       "TokenRefreshSkewSeconds": 60
@@ -97,7 +98,7 @@ Configure os handlers através da seção `ApiClient` no arquivo `appsettings.js
 "Authentication": {
   "Enabled": true,
   "Type": "Bearer",
-  "ApiKey": "seu-bearer-token"
+  "BearerToken": "seu-bearer-token"
 }
 ```
 
@@ -144,6 +145,7 @@ Configure os handlers através da seção `ApiClient` no arquivo `appsettings.js
 
 - `Enabled`: Habilita/desabilita o rate limiting
 - `RequestsPerMinute`: Número máximo de requisições por minuto
+- **Comportamento**: Quando o limite é atingido, o handler lança uma exceção `Exception` com a mensagem "Rate limit reached"
 
 #### Opções de Retry
 
@@ -179,6 +181,15 @@ builder.Configuration
 
 // 1. Registrar RestClient
 var httpClientBuilder = builder.Services.ConfigureGenericRestClient(builder.Configuration);
+
+// 1.1. Adicionar headers customizados (opcional)
+httpClientBuilder.ConfigureHttpClient(client =>
+{
+    if (!client.DefaultRequestHeaders.Contains("User-Agent"))
+    {
+        client.DefaultRequestHeaders.Add("User-Agent", "GenericRestClient/1.0");
+    }
+});
 
 // 2. Configurar handlers baseado nas opções
 var options = builder.Configuration.GetSection("ApiClient")
