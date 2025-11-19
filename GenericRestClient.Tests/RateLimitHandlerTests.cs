@@ -111,8 +111,8 @@ public class RateLimitHandlerTests
             ItExpr.IsAny<CancellationToken>());
     }
 
-    [Fact(DisplayName = "RateLimitHandler deve aguardar quando o limite é atingido")]
-    public async Task RateLimitHandler_WhenLimitReached_ShouldWaitBeforeNextRequest()
+    [Fact(DisplayName = "RateLimitHandler deve lançar exceção quando o limite é atingido")]
+    public async Task RateLimitHandler_WhenLimitReached_ShouldThrowException()
     {
         // Arrange
         var response = CreateSuccessResponse();
@@ -127,19 +127,15 @@ public class RateLimitHandlerTests
         var request2 = httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://api.example.com/test2"));
         await Task.WhenAll(request1, request2);
 
-        // Fazer uma terceira requisição que deve aguardar
-        var startTime = DateTime.UtcNow;
-        var request3 = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://api.example.com/test3"));
-        var elapsed = DateTime.UtcNow - startTime;
+        // Fazer uma terceira requisição que deve lançar exceção
+        var request3 = httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://api.example.com/test3"));
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, request3.StatusCode);
-        // Deve ter aguardado pelo menos alguns milissegundos (o tempo até a requisição mais antiga expirar)
-        // Como estamos usando 1 minuto, mas em testes podemos usar um valor menor, vamos verificar que houve algum delay
-        Assert.True(elapsed.TotalMilliseconds >= 0);
+        await Assert.ThrowsAsync<Exception>(() => request3);
+        Assert.Equal("Rate limit reached", (await Assert.ThrowsAsync<Exception>(() => request3)).Message);
         mockHandler.Protected().Verify(
             "SendAsync",
-            Times.Exactly(3),
+            Times.Exactly(2),
             ItExpr.IsAny<HttpRequestMessage>(),
             ItExpr.IsAny<CancellationToken>());
     }
@@ -178,8 +174,8 @@ public class RateLimitHandlerTests
 
     #region Concurrent Requests
 
-    [Fact(DisplayName = "RateLimitHandler deve controlar requisições concorrentes corretamente")]
-    public async Task RateLimitHandler_WithConcurrentRequests_ShouldControlCorrectly()
+    [Fact(DisplayName = "RateLimitHandler deve lançar exceção para requisições além do limite")]
+    public async Task RateLimitHandler_WithConcurrentRequests_ShouldThrowForExcessRequests()
     {
         // Arrange
         var response = CreateSuccessResponse();
@@ -193,13 +189,31 @@ public class RateLimitHandlerTests
         var tasks = Enumerable.Range(0, 5)
             .Select(i => httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, $"https://api.example.com/test{i}")));
 
-        var results = await Task.WhenAll(tasks);
+        // Assert - Algumas requisições devem lançar exceção
+        var exceptions = new List<Exception>();
+        var successes = new List<HttpResponseMessage>();
+        
+        foreach (var task in tasks)
+        {
+            try
+            {
+                var result = await task;
+                successes.Add(result);
+            }
+            catch (Exception ex)
+            {
+                exceptions.Add(ex);
+            }
+        }
 
-        // Assert - Todas devem ter sido processadas, mas com rate limiting
-        Assert.All(results, r => Assert.Equal(HttpStatusCode.OK, r.StatusCode));
+        // Deve ter exatamente 3 sucessos e 2 exceções (ou mais, dependendo da ordem de execução)
+        Assert.True(successes.Count <= 3, "Não deve ter mais de 3 requisições bem-sucedidas");
+        Assert.True(exceptions.Count >= 2, "Deve ter pelo menos 2 exceções de rate limit");
+        Assert.All(exceptions, ex => Assert.Equal("Rate limit reached", ex.Message));
+        
         mockHandler.Protected().Verify(
             "SendAsync",
-            Times.Exactly(5),
+            Times.AtMost(3),
             ItExpr.IsAny<HttpRequestMessage>(),
             ItExpr.IsAny<CancellationToken>());
     }
@@ -208,8 +222,8 @@ public class RateLimitHandlerTests
 
     #region Cancellation Token
 
-    [Fact(DisplayName = "RateLimitHandler deve respeitar CancellationToken durante o delay")]
-    public async Task RateLimitHandler_WithCancelledToken_ShouldThrowTaskCanceledException()
+    [Fact(DisplayName = "RateLimitHandler deve lançar exceção quando limite de 1 é atingido")]
+    public async Task RateLimitHandler_WithLimitOfOne_WhenLimitReached_ShouldThrowException()
     {
         // Arrange
         var response = CreateSuccessResponse();
@@ -218,17 +232,22 @@ public class RateLimitHandlerTests
         rateLimitHandler.InnerHandler = mockHandler.Object;
 
         using var httpClient = new HttpClient(rateLimitHandler);
-        var cts = new CancellationTokenSource();
 
         // Act - Fazer primeira requisição para atingir o limite
-        await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://api.example.com/test1"), cts.Token);
+        await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://api.example.com/test1"));
 
-        // Fazer segunda requisição e cancelar durante o delay
-        var request2 = httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://api.example.com/test2"), cts.Token);
-        cts.Cancel();
+        // Fazer segunda requisição que deve lançar exceção
+        var request2 = httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://api.example.com/test2"));
 
-        // Assert - HttpClient lança TaskCanceledException quando o token é cancelado
-        await Assert.ThrowsAsync<TaskCanceledException>(() => request2);
+        // Assert - Deve lançar exceção de rate limit
+        var exception = await Assert.ThrowsAsync<Exception>(() => request2);
+        Assert.Equal("Rate limit reached", exception.Message);
+        
+        mockHandler.Protected().Verify(
+            "SendAsync",
+            Times.Once(),
+            ItExpr.IsAny<HttpRequestMessage>(),
+            ItExpr.IsAny<CancellationToken>());
     }
 
     #endregion
@@ -283,17 +302,17 @@ public class RateLimitHandlerTests
         // Act
         var result1 = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://api.example.com/test1"));
         
-        // Segunda requisição deve aguardar
-        var startTime = DateTime.UtcNow;
-        var result2 = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://api.example.com/test2"));
-        var elapsed = DateTime.UtcNow - startTime;
+        // Segunda requisição deve lançar exceção
+        var request2 = httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://api.example.com/test2"));
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, result1.StatusCode);
-        Assert.Equal(HttpStatusCode.OK, result2.StatusCode);
+        var exception = await Assert.ThrowsAsync<Exception>(() => request2);
+        Assert.Equal("Rate limit reached", exception.Message);
+        
         mockHandler.Protected().Verify(
             "SendAsync",
-            Times.Exactly(2),
+            Times.Once(),
             ItExpr.IsAny<HttpRequestMessage>(),
             ItExpr.IsAny<CancellationToken>());
     }

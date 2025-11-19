@@ -45,6 +45,7 @@ public class AuthenticationHandlerTests
          Type = type,
          ApiKey = "test-api-key-123",
          ApiKeyHeader = "X-API-Key",
+         BearerToken = "test-bearer-token-123",
          ClientId = "test-client-id",
          ClientSecret = "test-client-secret",
          TokenEndpoint = "https://auth.example.com/token",
@@ -97,7 +98,7 @@ public class AuthenticationHandlerTests
       // Arrange
       var options = CreateOptions(
          type: "Bearer",
-         configure: auth => auth.ApiKey = "my-bearer-token-12345");
+         configure: auth => auth.BearerToken = "my-bearer-token-12345");
 
       var response = CreateSuccessResponse();
       var mockHandler = CreateMockHandler(response);
@@ -128,7 +129,7 @@ public class AuthenticationHandlerTests
       // Arrange
       var options = CreateOptions(
          type: "Bearer",
-         configure: auth => auth.ApiKey = "test-bearer-token");
+         configure: auth => auth.BearerToken = "test-bearer-token");
 
       var provider = new BearerTokenAuthProvider(
          options,
