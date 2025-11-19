@@ -1,6 +1,8 @@
 using GenericRestClient.Configuration;
 using Microsoft.Extensions.Options;
 
+namespace GenericRestClient.Configuration;
+
 public class ApiClientOptionsValidator : IValidateOptions<ApiClientOptions>
 {
 

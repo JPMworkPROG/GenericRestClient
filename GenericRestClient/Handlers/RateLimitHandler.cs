@@ -17,7 +17,7 @@ public class RateLimitHandler : DelegatingHandler
       _options = options.Value.RateLimit;
       _logger = logger;
 
-      _logger.LogInformation("Ratelimit middleware configured");
+      _logger.LogInformation("Ratelimit handler configured");
    }
 
    protected override async Task<HttpResponseMessage> SendAsync(

@@ -1,6 +1,4 @@
-using GenericRestClient.Configuration;
 using GenericRestClient.Handlers;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GenericRestClient.Extensions;

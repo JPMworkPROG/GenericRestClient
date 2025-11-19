@@ -34,7 +34,7 @@ public class RestClient : IRestClient
          _jsonOptions.PropertyNameCaseInsensitive);
    }
 
-   public async Task<TResponse?> GetAsync<TRequqest, TResponse>(string endpoint, CancellationToken cancellationToken = default)
+   public async Task<TResponse?> GetAsync<TResponse>(string endpoint, CancellationToken cancellationToken = default)
    {
       _logger.LogInformation(
          "Starting GET request to endpoint: {Endpoint}",
@@ -269,8 +269,8 @@ public class RestClient : IRestClient
    }
 
    private async Task<T?> DeserializeResponseAsync<T>(
-        HttpResponseMessage response,
-        CancellationToken cancellationToken)
+      HttpResponseMessage response,
+      CancellationToken cancellationToken)
    {
       _logger.LogDebug(
          "Starting response deserialization with status {StatusCode}",
@@ -315,8 +315,7 @@ public class RestClient : IRestClient
             ex,
             "HTTP error deserializing response: {ErrorMessage}",
             ex.Message);
-         // throw;
-         return default;
+         throw;
       }
       catch (JsonException ex)
       {
@@ -324,8 +323,7 @@ public class RestClient : IRestClient
             ex,
             "Error deserializing JSON: {ErrorMessage}",
             ex.Message);
-         // throw;
-         return default;
+         throw;
       }
       catch (Exception ex)
       {
@@ -333,8 +331,7 @@ public class RestClient : IRestClient
             ex,
             "Unexpected error deserializing response: {ErrorMessage}",
             ex.Message);
-         // throw;
-         return default;
+         throw;
       }
    }
 }

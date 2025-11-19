@@ -6,6 +6,7 @@ public class AuthenticationOptions
    public string Type { get; set; } = string.Empty;
    public string ApiKey { get; set; } = string.Empty;
    public string ApiKeyHeader { get; set; } = string.Empty;
+   public string BearerToken { get; set; } = string.Empty;
    public string ClientId { get; set; } = string.Empty;
    public string ClientSecret { get; set; } = string.Empty;
    public string TokenEndpoint { get; set; } = string.Empty;
@@ -39,13 +40,13 @@ public class AuthenticationOptions
             break;
 
          default:
-            throw new InvalidOperationException($"Unsupported authentication type '{Type}'. Supported types: Bearer, OAuth2.");
+            throw new InvalidOperationException($"Unsupported authentication type '{Type}'. Supported types: Bearer, ApiKey, OAuth2.");
       }
    }
 
    public void BearerValidation()
    {
-      if (string.IsNullOrWhiteSpace(ApiKey))
+      if (string.IsNullOrWhiteSpace(BearerToken))
       {
          throw new InvalidOperationException(
             "BearerToken is required when Authentication Type is 'Bearer'.");

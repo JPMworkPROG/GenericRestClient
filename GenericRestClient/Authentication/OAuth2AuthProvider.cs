@@ -28,7 +28,7 @@ public class OAuth2AuthProvider : IAuthProvider
       _httpClientFactory = httpClientFactory;
       _logger = logger;
 
-      _logger.LogInformation("Authentication middleware 'OAuth2' configured");
+      _logger.LogInformation("Authentication handler 'OAuth2' configured");
    }
 
    public async Task<string> GetAccessTokenAsync()

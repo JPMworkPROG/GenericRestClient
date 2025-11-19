@@ -4,10 +4,11 @@ using Microsoft.Extensions.Options;
 
 namespace GenericRestClient.Authentication;
 
-   public class ApiKeyAuthProvider : IAuthProvider
+public class ApiKeyAuthProvider : IAuthProvider
 {
    private readonly AuthenticationOptions _authOptions;
    private readonly ILogger<ApiKeyAuthProvider> _logger;
+
    public ApiKeyAuthProvider(
       IOptions<ApiClientOptions> options,
       ILogger<ApiKeyAuthProvider> logger)
@@ -15,7 +16,7 @@ namespace GenericRestClient.Authentication;
       _authOptions = options.Value.Authentication;
       _logger = logger;
 
-      _logger.LogInformation("Authentication middleware 'ApiKey' configured");
+      _logger.LogInformation("Authentication handler 'ApiKey' configured");
    }
 
    public Task<string> GetAccessTokenAsync()

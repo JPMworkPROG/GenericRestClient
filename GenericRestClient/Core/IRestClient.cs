@@ -2,7 +2,7 @@ namespace GenericRestClient.Core;
 
 public interface IRestClient
 {
-    Task<TResponse?> GetAsync<TRequqest, TResponse>(
+    Task<TResponse?> GetAsync<TResponse>(
         string endpoint,
         CancellationToken cancellationToken = default);
 

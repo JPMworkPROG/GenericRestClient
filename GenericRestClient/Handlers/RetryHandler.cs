@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Polly;
 using Polly.Retry;
-using System.Net;
 using System.Net.Sockets;
 
 namespace GenericRestClient.Handlers;
@@ -21,7 +20,7 @@ public class RetryHandler : DelegatingHandler
       _retryPipeline = BuildRetryPipeline();
 
       _logger.LogInformation(
-         "Retry handler configured: MaxRetries={MaxRetries}, BaseDelay={BaseDelay}ms, ExponentialBackoff={ExponentialBackoff}",
+         "Retry handler configured",
          _options.MaxRetries,
          _options.BaseDelayMilliseconds,
          _options.UseExponentialBackoff);
