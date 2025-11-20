@@ -4,7 +4,25 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    
+    <!-- NuGet Package Metadata -->
+    <PackageId>GenericRestClient</PackageId>
+    <Version>1.0.1</Version>
+    <Authors>JPMworkPROG</Authors>
+    <Description>Cliente REST genérico para .NET 9.0 com suporte a autenticação (Bearer Token, OAuth2, API Key), rate limiting e retry automático. Desenvolvido como solução para integração com APIs REST de forma resiliente e configurável.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/JPMworkPROG/GenericRestClient</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/JPMworkPROG/GenericRestClient</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>REST;HTTP;Client;OAuth2;Bearer;API-Key;RateLimit;Retry;Polly;Resilience;.NET9</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="README.md" />
+    <None Include="../documentation/RequestPipelineFlow.md" Pack="true" PackagePath="docs/RequestPipelineFlow.md" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.10" />
